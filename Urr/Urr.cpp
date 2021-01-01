@@ -4,6 +4,7 @@
 
 NAMESPACE_UPP
 
+
 int Rcv(SOCKET skt, void *buffer, int bsize, int timeout, void *adr, socklen_t *adrlen)
 {
 	LTIMING("Rcv");
