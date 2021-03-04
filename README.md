@@ -10,47 +10,52 @@ while adding security to UDP, which can handle lost, delayed or duplicated datag
 response messages longer than 8KB. (It also, as an option, provides one-way messages without
 security).
 
-In following, data structres are described using C; all data are in little-endian architecture,
+In following, data structures are described using C; all data are in little-endian architecture,
 word is 16 bit word, Uuid is 16 bytes unique identificator (random generated with high quality
 random generator).
 
-Request:
+# Request
 
-Header:
+####  Header:
 
+```C++
 struct UrrRequestHdr {
 	Uuid        id;         // unique identifier of request
 	byte        version;    // now 0
 	byte        flags;      // bit flags - now can be 0 or URR_ONEWAY (0x01)
 	word        blksize;    // maximum length of one datagram in response (default 8000)
 };
-
+```
 The only allowed option in flags so far is URR_ONEWAY (0x01) - it instructs server not to
 send the response (avoids security).
 
 Header is followed by request, size of request is limited by maximum UDP datagram size
 (safe bet is 8000 bytes).
 
-Response:
+# Response
 
-Header:
+#### Header:
 
+```C++
 struct UrrResponseHdr {
 	Uuid        id;
 	int         part;
 };
+```
 
 id has the value from UrrRequestHdr; this assures that client can distiguish the correct
 response (e.g. if some datagrams get duplicated and/or delayed).
 
 part designates the meaing of datagram. It can be positive index of block or one of
 
+```
 URR_LAST       = -1, // this is the last datagram of response
 URR_FIN        = -2, // finalizing multi-datagram response
 URR_SINGLE     = -3, // this is single datagram response
 URR_PROCESSING = -4, // server is still processing the request, retry later
+```
 
-Protocol:
+# Protocol
 
 In the most common case, when reponse fits the single datagram and no timeout (e.g. packed lost)
 is involved, all the request response consists of two datagrams. Server response with URR_SINGLE,
@@ -74,7 +79,7 @@ After URR_LAST server sends one last URR_FIN to make client aware that acknowled
 acknowledge and server ignores them - lost URR_FIN has performance impact on client, but it is not
 an error (reason: it is better to stall the client rather than server).
 
-More about server:
+# More about server
 
 Server in principle stores last 10 seconds (adjustable default) requests based on Uuid and response to them.
 It is also possible that server application for some kind of requests tells the server not to store response
